@@ -6,7 +6,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
  *   1: {
  *     DAI: {
  *       address: "0x...",
- *       abi: [...],
+ *       abi: [z],
  *     },
  *   },
  * } as const;
