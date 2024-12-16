@@ -33,7 +33,9 @@ const TokenA: NextPage = () => {
     } catch (e) {
       console.error("Error setting greeting:", e);
     }
-  };
+  }
+
+
   return (
     <>
       <div className="flex items-center flex-col text-center mt-8  p-10">

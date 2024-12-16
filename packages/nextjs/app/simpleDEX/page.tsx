@@ -3,6 +3,7 @@ import type { NextPage } from "next";
 import { AddressInput } from "~~/components/scaffold-eth";
 import { IntegerInput } from "~~/components/scaffold-eth";
 import { InputBase } from "~~/components/scaffold-eth";
+
 import { CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
@@ -21,6 +22,11 @@ const SimpleDEX: NextPage = () => {
     functionName: "balanceOf",
     args: [account?.address ?? ""],
   });
+  const { data: tokenBalanceB } = useScaffoldReadContract({
+    contractName: "TokenA",
+    functionName: "balanceOf",
+    args: [account?.address ?? ""],
+  });
 
   const { writeContractAsync: mintTokens } = useScaffoldWriteContract("TokenA");
 
@@ -33,9 +39,7 @@ const SimpleDEX: NextPage = () => {
     } catch (e) {
       console.error("Error setting greeting:", e);
     }
-  }
-
-
+  };
   return (
     <>
       <div className="flex items-center flex-col text-center mt-8  p-10">
@@ -46,11 +50,11 @@ const SimpleDEX: NextPage = () => {
             <label>Reserve A</label>
             <InputBase name="actuAlamount" disabled placeholder="Actual Amount" value={formatEther(tokenBalanceA || BigInt(0))} onChange={setUrl} />
             <label>Reserve B</label>
-            <InputBase name="actuAlamount" disabled placeholder="Actual Amount" value={formatEther(tokenBalanceA || BigInt(0))} onChange={setUrl} />
-            <label>To address</label>
-            <AddressInput onChange={setAddress} value={address} placeholder="Input your address" />
+            <InputBase name="actuAlamount" disabled placeholder="Actual Amount" value={formatEther(tokenBalanceB || BigInt(0))} onChange={setUrl} />
+            <label>Swap A x B</label>
+            <InputBase name="actuAlamount"  placeholder="Ingrese Tokens A" value={atualAmount} onChange={setUrl} />
             <div className="card-actions justify-end">
-              <button className="btn btn-primary w-full mt-2" onClick={() => { handleMint }}><CurrencyDollarIcon className="h-4 w-4" />Approve Now</button>
+              <button className="btn btn-primary w-full mt-2" onClick={() => { handleMint }}><CurrencyDollarIcon className="h-4 w-4" />Swap</button>
             </div>
           </div>
         </div>

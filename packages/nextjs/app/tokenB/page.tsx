@@ -33,8 +33,7 @@ const TokenA: NextPage = () => {
     } catch (e) {
       console.error("Error setting greeting:", e);
     }
-  }
-
+  };
 
   return (
     <>
