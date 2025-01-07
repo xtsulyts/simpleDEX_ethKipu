@@ -84,6 +84,7 @@ const SimpleDEX: NextPage = () => {
             <h2 className="card-title flex-col text-center">Transacction</h2>
             <label>Reserve A</label>
             <InputBase name="actuAlamount" disabled placeholder="Actual Amount" value={formatEther(_amountA || BigInt(0))} onChange={setUrl} />
+              placeholder="value (wei)"
             <label>Reserve B</label>
             <InputBase name="actuAlamount" disabled placeholder="Actual Amount" value={formatEther(_amountB || BigInt(0))} onChange={setUrl} />
             <label>Swap A x B</label>

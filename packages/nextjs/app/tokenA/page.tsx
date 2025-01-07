@@ -45,16 +45,10 @@ const TokenA: NextPage = () => {
             <h2 className="card-title flex-col text-center">Transacction</h2>
             <label>Actual Ammount</label>
             <InputBase name="actuAlamount" disabled placeholder="Actual Amount" value={formatEther(tokenBalance || BigInt(0))} onChange={setUrl} />
-            <label>Amount to Mint</label>
-            <IntegerInput
-              value={amountMint}
-              onChange={updatedAmount => {
-                setAmountMint(updatedAmount);
-              }}
-              placeholder="value (wei)"
-            />
-            <label>To address</label>
+            
             <AddressInput onChange={setAddress} value={address} placeholder="Input your address" />
+            <label>To address</label>
+
             <div className="card-actions justify-end">
               <button className="btn btn-primary w-full mt-2" onClick={() => { handleMint }}><CurrencyDollarIcon className="h-4 w-4" />Approve Now</button>
             </div>
