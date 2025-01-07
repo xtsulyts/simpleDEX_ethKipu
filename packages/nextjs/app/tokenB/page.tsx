@@ -10,10 +10,10 @@ import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { useAccount } from 'wagmi'
 import { formatEther } from "viem";
 
-const TokenA: NextPage = () => {
+const TokenB: NextPage = () => {
   const [address, setAddress] = useState("");
   const [amountMint, setAmountMint] = useState<string | bigint>("");
-  const [atualAmount, setUrl] = useState<string>();
+  const [atualAmount, setUrl] = useState<string | bigint>();
   const account = useAccount();
 
   const { data: tokenBalance } = useScaffoldReadContract({
@@ -44,14 +44,7 @@ const TokenA: NextPage = () => {
             <h2 className="card-title flex-col text-center">Transacction</h2>
             <label>Actual Ammount</label>
             <InputBase name="actuAlamount" disabled placeholder="Actual Amount" value={formatEther(tokenBalance || BigInt(0))} onChange={setUrl} />
-            <label>Amount to Mint</label>
-            <IntegerInput
-              value={amountMint}
-              onChange={updatedAmount => {
-                setAmountMint(updatedAmount);
-              }}
-              placeholder="value (wei)"
-            />
+           
             <label>To address</label>
             <AddressInput onChange={setAddress} value={address} placeholder="Input your address" />
             <div className="card-actions justify-end">
@@ -64,4 +57,4 @@ const TokenA: NextPage = () => {
   );
 };
 
-export default TokenA;
+export default TokenB;

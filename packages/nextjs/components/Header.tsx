@@ -40,6 +40,7 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/simpleDEX",
     icon: <MoonIcon className="h-4 w-4" />,
   },
+  
 ];
 
 export const HeaderMenuLinks = () => {
@@ -109,8 +110,8 @@ export const Header = () => {
             <Image alt="SE2 logo" className="cursor-pointer" fill src="/logo.svg" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold leading-tight">SimpleDEX-ethKIPU-MOD-4</span>
-            <span className="text-xs">Walter Frias</span>
+            <span className="font-bold leading-tight">SwapLite</span>
+            <span className="text-xs">Intercambio de Tokens ERC20</span>
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
