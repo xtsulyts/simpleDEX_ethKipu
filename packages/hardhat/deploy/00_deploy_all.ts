@@ -12,7 +12,7 @@ const deployAllContracts: DeployFunction = async function (hre: HardhatRuntimeEn
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  console.log("Deploying contracts with the deployer account:", deployer);
+  console.log("Contrato desplegado desde esta cuenta:", deployer);
 
   // Deploy TokenA
   console.log("Deploying TokenA...");
@@ -23,7 +23,7 @@ const deployAllContracts: DeployFunction = async function (hre: HardhatRuntimeEn
     autoMine: true,
   });
   const tokenAAddress = tokenADeployment.address;
-  console.log("TokenA deployed at:", tokenAAddress);
+  console.log("Direccion de despliegue de TokenA:", tokenAAddress);
 
   // Deploy TokenB
   console.log("Deploying TokenB...");
@@ -34,7 +34,7 @@ const deployAllContracts: DeployFunction = async function (hre: HardhatRuntimeEn
     autoMine: true,
   });
   const tokenBAddress = tokenBDeployment.address;
-  console.log("TokenB deployed at:", tokenBAddress);
+  console.log("Direccion de despliegue de TokenB:", tokenBAddress);
 
   // Deploy SimpleDEX, passing TokenA and TokenB addresses
   console.log("Deploying SimpleDEX...");
