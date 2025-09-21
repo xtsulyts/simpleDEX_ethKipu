@@ -4,8 +4,7 @@ import type { NextPage } from "next";
 import { useState } from "react";
 import { 
   AddressInput, 
-  IntegerInput, 
-  InputBase 
+  IntegerInput
 } from "~~/components/scaffold-eth";
 import { 
   CurrencyDollarIcon, 
@@ -14,20 +13,13 @@ import {
   CheckBadgeIcon 
 } from "@heroicons/react/24/outline";
 import { 
-  useScaffoldWriteContract, 
-  useScaffoldReadContract 
+  useScaffoldReadContract,
+  useTransactor
 } from "~~/hooks/scaffold-eth";
 import { formatEther, parseEther } from "viem";
 import { useAccount } from 'wagmi';
+//import { useTransactor } from "~~/hooks/useTransactor";
 
-/**
- * Página principal para interactuar con el contrato TokenB
- * Proporciona interfaz para todas las operaciones del ERC20:
- * - Consulta de balance
- * - Transferencias
- * - Aprobaciones y transferencias delegadas
- * - Quema de tokens
- */
 const TokenB: NextPage = () => {
   // Estados para formularios
   const [transferAddress, setTransferAddress] = useState("");
@@ -43,51 +35,57 @@ const TokenB: NextPage = () => {
   const [transferFromAmount, setTransferFromAmount] = useState<string>("");
 
   // Hook para obtener la cuenta conectada
-  const account = useAccount();
+  const { address, isConnected, isDisconnected } = useAccount();
+  
+  // Hook useTransactor para manejar transacciones
+  const transactor = useTransactor();
 
   /**
    * Hook de lectura para obtener el balance del usuario conectado
-   * Usa la función balanceOf del contrato TokenB
    */
   const { data: tokenBalance, refetch: refetchBalance } = useScaffoldReadContract({
     contractName: "TokenB",
     functionName: "balanceOf",
-    args: [account?.address ?? "0x"],
+    args: [address ?? "0x"],
+    enabled: isConnected,
   });
 
   /**
    * Hook de lectura para obtener la asignación (allowance) aprobada
-   * Útil para ver cuánto puede gastar un spender en nombre del usuario
    */
   const { data: currentAllowance, refetch: refetchAllowance } = useScaffoldReadContract({
     contractName: "TokenB",
     functionName: "allowance",
-    args: [account?.address ?? "0x", approveSpender],
+    args: [address ?? "0x", approveSpender as `0x${string}`],
+    enabled: isConnected && approveSpender !== "",
   });
-
-  // Hooks para escritura (transacciones)
-  const { writeContractAsync: transfer } = useScaffoldWriteContract("TokenB");
-  const { writeContractAsync: approve } = useScaffoldWriteContract("TokenB");
-  const { writeContractAsync: burn } = useScaffoldWriteContract("TokenB");
-  const { writeContractAsync: transferFrom } = useScaffoldWriteContract("TokenB");
 
   /**
    * Maneja la transferencia directa de tokens
-   * Usa la función transfer del contrato ERC20
    */
   const handleTransfer = async () => {
     try {
+      if (!isConnected) {
+        alert("Por favor conecta tu wallet primero");
+        return;
+      }
+
       if (!transferAddress || !transferAmount) {
         alert("Por favor completa todos los campos");
         return;
       }
 
-      await transfer({
-        functionName: "transfer",
-        args: [transferAddress, parseEther(transferAmount)],
-      });
+      if (!transactor) {
+        alert("Error: Transactor no disponible");
+        return;
+      }
 
-      // Resetear formulario y actualizar datos
+      await transactor(() => ({
+        functionName: "transfer",
+        args: [transferAddress as `0x${string}`, parseEther(transferAmount)],
+        contractName: "TokenB",
+      }));
+
       setTransferAddress("");
       setTransferAmount("");
       await refetchBalance();
@@ -101,21 +99,30 @@ const TokenB: NextPage = () => {
 
   /**
    * Maneja la aprobación de tokens para un spender
-   * Permite a otra dirección gastar tokens en nombre del usuario
    */
   const handleApprove = async () => {
     try {
+      if (!isConnected) {
+        alert("Por favor conecta tu wallet primero");
+        return;
+      }
+
       if (!approveSpender || !approveAmount) {
         alert("Por favor completa todos los campos");
         return;
       }
 
-      await approve({
-        functionName: "approve",
-        args: [approveSpender, parseEther(approveAmount)],
-      });
+      if (!transactor) {
+        alert("Error: Transactor no disponible");
+        return;
+      }
 
-      // Resetear formulario y actualizar allowance
+      await transactor(() => ({
+        functionName: "approve",
+        args: [approveSpender as `0x${string}`, parseEther(approveAmount)],
+        contractName: "TokenB",
+      }));
+
       setApproveSpender("");
       setApproveAmount("");
       await refetchAllowance();
@@ -129,21 +136,30 @@ const TokenB: NextPage = () => {
 
   /**
    * Maneja la quema (burn) de tokens
-   * Reduce el supply total eliminando tokens del circulación
    */
   const handleBurn = async () => {
     try {
+      if (!isConnected) {
+        alert("Por favor conecta tu wallet primero");
+        return;
+      }
+
       if (!burnAmount) {
         alert("Por favor ingresa la cantidad a quemar");
         return;
       }
 
-      await burn({
+      if (!transactor) {
+        alert("Error: Transactor no disponible");
+        return;
+      }
+
+      await transactor(() => ({
         functionName: "burn",
         args: [parseEther(burnAmount)],
-      });
+        contractName: "TokenB",
+      }));
 
-      // Resetear formulario y actualizar balance
       setBurnAmount("");
       await refetchBalance();
       
@@ -156,21 +172,34 @@ const TokenB: NextPage = () => {
 
   /**
    * Maneja transferencia desde otra dirección (transferFrom)
-   * Para cuando se tiene aprobación para gastar tokens de otro usuario
    */
   const handleTransferFrom = async () => {
     try {
+      if (!isConnected) {
+        alert("Por favor conecta tu wallet primero");
+        return;
+      }
+
       if (!fromAddress || !toAddress || !transferFromAmount) {
         alert("Por favor completa todos los campos");
         return;
       }
 
-      await transferFrom({
-        functionName: "transferFrom",
-        args: [fromAddress, toAddress, parseEther(transferFromAmount)],
-      });
+      if (!transactor) {
+        alert("Error: Transactor no disponible");
+        return;
+      }
 
-      // Resetear formulario
+      await transactor(() => ({
+        functionName: "transferFrom",
+        args: [
+          fromAddress as `0x${string}`, 
+          toAddress as `0x${string}`, 
+          parseEther(transferFromAmount)
+        ],
+        contractName: "TokenB",
+      }));
+
       setFromAddress("");
       setToAddress("");
       setTransferFromAmount("");
@@ -182,151 +211,171 @@ const TokenB: NextPage = () => {
     }
   };
 
-  return (
-    <>
+  if (isDisconnected) {
+    return (
       <div className="flex items-center flex-col text-center mt-8 p-10">
-        
-        {/* Tarjeta de Balance */}
-        <div className="card bg-base-100 w-96 shadow-xl mb-6">
-          <div className="card-body">
-            <h1 className="text-4xl my-0">Token B (TKB)</h1>
-            <div className="stats shadow">
-              <div className="stat">
-                <div className="stat-title">Tu Balance</div>
-                <div className="stat-value text-primary">
-                  {tokenBalance ? formatEther(tokenBalance) : "0"}
-                </div>
-                <div className="stat-desc">Tokens TKB</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sección de Transferencia */}
-        <div className="card bg-base-100 w-96 shadow-xl mb-6">
-          <div className="card-body">
-            <h2 className="card-title">
-              <ArrowRightIcon className="h-6 w-6" />
-              Transferir Tokens
-            </h2>
-            
-            <AddressInput 
-              value={transferAddress}
-              onChange={setTransferAddress}
-              placeholder="Dirección destino"
-            />
-            
-            <IntegerInput
-              value={transferAmount}
-              onChange={setTransferAmount}
-              placeholder="Cantidad TKB"
-            />
-            
-            <div className="card-actions justify-end">
-              <button className="btn btn-primary w-full" onClick={handleTransfer}>
-                <CurrencyDollarIcon className="h-4 w-4" />
-                Transferir
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Sección de Aprobación */}
-        <div className="card bg-base-100 w-96 shadow-xl mb-6">
-          <div className="card-body">
-            <h2 className="card-title">
-              <CheckBadgeIcon className="h-6 w-6" />
-              Aprobar Tokens
-            </h2>
-            
-            <AddressInput 
-              value={approveSpender}
-              onChange={setApproveSpender}
-              placeholder="Dirección autorizada"
-            />
-            
-            <IntegerInput
-              value={approveAmount}
-              onChange={setApproveAmount}
-              placeholder="Cantidad a aprobar"
-            />
-            
-            {currentAllowance && (
-              <div className="text-sm text-gray-600">
-                Allowance actual: {formatEther(currentAllowance)} TKB
-              </div>
-            )}
-            
-            <div className="card-actions justify-end">
-              <button className="btn btn-secondary w-full" onClick={handleApprove}>
-                <CheckBadgeIcon className="h-4 w-4" />
-                Aprobar
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Sección de Quema */}
-        <div className="card bg-base-100 w-96 shadow-xl mb-6">
-          <div className="card-body">
-            <h2 className="card-title">
-              <FireIcon className="h-6 w-6" />
-              Quemar Tokens
-            </h2>
-            
-            <IntegerInput
-              value={burnAmount}
-              onChange={setBurnAmount}
-              placeholder="Cantidad a quemar"
-            />
-            
-            <div className="card-actions justify-end">
-              <button className="btn btn-error w-full" onClick={handleBurn}>
-                <FireIcon className="h-4 w-4" />
-                Quemar Tokens
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Sección Transfer From (para spending aprobado) */}
         <div className="card bg-base-100 w-96 shadow-xl">
           <div className="card-body">
-            <h2 className="card-title">
-              <ArrowRightIcon className="h-6 w-6" />
-              Transferencia Delegada
-            </h2>
-            
-            <AddressInput 
-              value={fromAddress}
-              onChange={setFromAddress}
-              placeholder="Dirección origen (owner)"
-            />
-            
-            <AddressInput 
-              value={toAddress}
-              onChange={setToAddress}
-              placeholder="Dirección destino"
-            />
-            
-            <IntegerInput
-              value={transferFromAmount}
-              onChange={setTransferFromAmount}
-              placeholder="Cantidad TKB"
-            />
-            
-            <div className="card-actions justify-end">
-              <button className="btn btn-warning w-full" onClick={handleTransferFrom}>
-                <ArrowRightIcon className="h-4 w-4" />
-                Transferir From
-              </button>
+            <h2 className="card-title">Conecta tu wallet</h2>
+            <p>Por favor conecta tu wallet para interactuar con el contrato TokenB</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center flex-col text-center mt-8 p-10">
+      
+      {/* Indicador de conexión */}
+      <div className="text-sm mb-4">
+        {isConnected && (
+          <div className="badge badge-success gap-2">
+            Conectado: {address?.substring(0, 6)}...{address?.substring(address.length - 4)}
+          </div>
+        )}
+      </div>
+
+      {/* Tarjeta de Balance */}
+      <div className="card bg-base-100 w-96 shadow-xl mb-6">
+        <div className="card-body">
+          <h1 className="text-4xl my-0">Token B (TKB)</h1>
+          <div className="stats shadow">
+            <div className="stat">
+              <div className="stat-title">Tu Balance</div>
+              <div className="stat-value text-primary">
+                {tokenBalance ? formatEther(tokenBalance) : "0"}
+              </div>
+              <div className="stat-desc">Tokens TKB</div>
             </div>
           </div>
         </div>
-
       </div>
-    </>
+
+      {/* Sección de Transferencia */}
+      <div className="card bg-base-100 w-96 shadow-xl mb-6">
+        <div className="card-body">
+          <h2 className="card-title">
+            <ArrowRightIcon className="h-6 w-6" />
+            Transferir Tokens
+          </h2>
+          
+          <AddressInput 
+            value={transferAddress}
+            onChange={setTransferAddress}
+            placeholder="Dirección destino"
+          />
+          
+          <IntegerInput
+            value={transferAmount}
+            onChange={setTransferAmount}
+            placeholder="Cantidad TKB"
+          />
+          
+          <div className="card-actions justify-end">
+            <button className="btn btn-primary w-full" onClick={handleTransfer}>
+              <CurrencyDollarIcon className="h-4 w-4" />
+              Transferir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección de Aprobación */}
+      <div className="card bg-base-100 w-96 shadow-xl mb-6">
+        <div className="card-body">
+          <h2 className="card-title">
+            <CheckBadgeIcon className="h-6 w-6" />
+            Aprobar Tokens
+          </h2>
+          
+          <AddressInput 
+            value={approveSpender}
+            onChange={setApproveSpender}
+            placeholder="Dirección autorizada"
+          />
+          
+          <IntegerInput
+            value={approveAmount}
+            onChange={setApproveAmount}
+            placeholder="Cantidad a aprobar"
+          />
+          
+          {currentAllowance && (
+            <div className="text-sm text-gray-600">
+              Allowance actual: {formatEther(currentAllowance)} TKB
+            </div>
+          )}
+          
+          <div className="card-actions justify-end">
+            <button className="btn btn-secondary w-full" onClick={handleApprove}>
+              <CheckBadgeIcon className="h-4 w-4" />
+              Aprobar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección de Quema */}
+      <div className="card bg-base-100 w-96 shadow-xl mb-6">
+        <div className="card-body">
+          <h2 className="card-title">
+            <FireIcon className="h-6 w-6" />
+            Quemar Tokens
+          </h2>
+          
+          <IntegerInput
+            value={burnAmount}
+            onChange={setBurnAmount}
+            placeholder="Cantidad a quemar"
+          />
+          
+          <div className="card-actions justify-end">
+            <button className="btn btn-error w-full" onClick={handleBurn}>
+              <FireIcon className="h-4 w-4" />
+              Quemar Tokens
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Sección Transfer From */}
+      <div className="card bg-base-100 w-96 shadow-xl">
+        <div className="card-body">
+          <h2 className="card-title">
+            <ArrowRightIcon className="h-6 w-6" />
+            Transferencia Delegada
+          </h2>
+          
+          <AddressInput 
+            value={fromAddress}
+            onChange={setFromAddress}
+            placeholder="Dirección origen (owner)"
+          />
+          
+          <AddressInput 
+            value={toAddress}
+            onChange={setToAddress}
+            placeholder="Dirección destino"
+          />
+          
+          <IntegerInput
+            value={transferFromAmount}
+            onChange={setTransferFromAmount}
+            placeholder="Cantidad TKB"
+          />
+          
+          <div className="card-actions justify-end">
+            <button className="btn btn-warning w-full" onClick={handleTransferFrom}>
+              <ArrowRightIcon className="h-4 w-4" />
+              Transferir From
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
   );
 };
 
-export default TokenB;      
+export default TokenB;
