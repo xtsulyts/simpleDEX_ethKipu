@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+//import Link from "next/link";
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
 import { Address, Balance, InputBase, IntegerInput } from "~~/components/scaffold-eth";
@@ -14,7 +14,7 @@ import TokenB from "./tokenB/page";
 const Home: NextPage = () => {
 
   const { address: connectedAddress } = useAccount();
-  const [address, setAddress] = useState("");
+  //const [address, setAddress] = useState("");
   const [amountMint, setAmountMint] = useState<string | bigint>("");
   const [atualAmount, setUrl] = useState<string>();
   const account = useAccount();
